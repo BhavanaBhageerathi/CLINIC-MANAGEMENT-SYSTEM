@@ -10,7 +10,6 @@ class Department(models.Model):
     def __str__(self):
         return self.name
 
-
 class Staff(models.Model):
 
     ROLE_CHOICES = [
@@ -20,22 +19,77 @@ class Staff(models.Model):
         ("LAB_TECHNICIAN", "Lab Technician"),
     ]
 
-    staff_id = models.CharField(max_length=20, unique=True)
+    staff_id = models.CharField(
+        max_length=20,
+        unique=True
+    )
+
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
         related_name="staff_profile"
     )
+
     role = models.CharField(
         max_length=30,
         choices=ROLE_CHOICES
     )
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+
+    is_active = models.BooleanField(
+        default=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def save(self, *args, **kwargs):
+
+        if not self.staff_id:
+
+            prefixes = {
+                "DOCTOR": "DOC",
+                "RECEPTIONIST": "REC",
+                "PHARMACIST": "PHA",
+                "LAB_TECHNICIAN": "LAB",
+            }
+
+            prefix = prefixes.get(
+                self.role,
+                "STF"
+            )
+
+            last_staff = (
+                Staff.objects
+                .filter(
+                    staff_id__startswith=prefix
+                )
+                .order_by("-staff_id")
+                .first()
+            )
+
+            if last_staff:
+                last_number = int(
+                    last_staff.staff_id[len(prefix):]
+                )
+
+                next_number = last_number + 1
+
+            else:
+                next_number = 1
+
+            self.staff_id = (
+                f"{prefix}{next_number:03d}"
+            )
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.staff_id} - {self.user.get_full_name()}"
 
+        return (
+            f"{self.staff_id} - "
+            f"{self.user.get_full_name()}"
+        )
 
 class DoctorProfile(models.Model):
     staff = models.OneToOneField(
