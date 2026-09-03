@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
 
 function Staff() {
+  // =========================
+  // STAFF DATA
+  // =========================
   const [staff, setStaff] = useState([]);
   const [departments, setDepartments] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Add Staff form
+  // =========================
+  // ADD STAFF FORM
+  // =========================
   const [showForm, setShowForm] = useState(false);
   const [creating, setCreating] = useState(false);
   const [formError, setFormError] = useState("");
@@ -28,7 +33,6 @@ function Staff() {
   // =========================
   // LOAD DATA WHEN PAGE OPENS
   // =========================
-
   useEffect(() => {
     fetchStaff();
     fetchDepartments();
@@ -37,18 +41,21 @@ function Staff() {
   // =========================
   // FETCH STAFF
   // =========================
-
   const fetchStaff = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/admin/staff/", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/admin/staff/",
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
+        console.error("STAFF API ERROR:", data);
         setError("Unable to load staff.");
         setLoading(false);
         return;
@@ -66,7 +73,6 @@ function Staff() {
   // =========================
   // FETCH DEPARTMENTS
   // =========================
-
   const fetchDepartments = async () => {
     try {
       const response = await fetch(
@@ -75,15 +81,17 @@ function Staff() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
-        },
+        }
       );
 
       const data = await response.json();
 
       if (!response.ok) {
-        console.error("Unable to load departments:", data);
+        console.error("DEPARTMENT API ERROR:", data);
         return;
       }
+
+      console.log("DEPARTMENTS RECEIVED BY REACT:", data);
 
       setDepartments(data);
     } catch (error) {
@@ -94,16 +102,14 @@ function Staff() {
   // =========================
   // HANDLE FORM INPUT
   // =========================
-
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
 
-    setFormData({
-      ...formData,
+    setFormData((previousData) => ({
+      ...previousData,
       [name]: type === "checkbox" ? checked : value,
-    });
+    }));
 
-    // Clear errors when user changes a field
     setFormError("");
     setSuccessMessage("");
   };
@@ -111,7 +117,6 @@ function Staff() {
   // =========================
   // RESET FORM
   // =========================
-
   const resetForm = () => {
     setFormData({
       username: "",
@@ -129,7 +134,6 @@ function Staff() {
   // =========================
   // CREATE STAFF
   // =========================
-
   const handleCreateStaff = async (event) => {
     event.preventDefault();
 
@@ -138,7 +142,6 @@ function Staff() {
     setCreating(true);
 
     try {
-      // Create a copy of the form data
       const dataToSend = {
         username: formData.username,
         first_name: formData.first_name,
@@ -149,28 +152,26 @@ function Staff() {
         is_active: formData.is_active,
       };
 
-      // Department and consultation fee
-      // are required only for Doctor
+      // =========================
+      // DOCTOR-SPECIFIC DATA
+      // =========================
       if (formData.role === "DOCTOR") {
         dataToSend.department = Number(formData.department);
-
         dataToSend.consultation_fee = formData.consultation_fee;
       }
 
-      // Send data to Django
+      console.log("DATA BEING SENT:", dataToSend);
+
       const response = await fetch(
         "http://127.0.0.1:8000/api/admin/staff/create/",
         {
           method: "POST",
-
           headers: {
             "Content-Type": "application/json",
-
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           },
-
           body: JSON.stringify(dataToSend),
-        },
+        }
       );
 
       const data = await response.json();
@@ -178,11 +179,9 @@ function Staff() {
       // =========================
       // HANDLE ERROR
       // =========================
-
       if (!response.ok) {
         console.error("CREATE STAFF ERROR:", data);
 
-        // Django serializer errors
         if (typeof data === "object") {
           const messages = [];
 
@@ -210,18 +209,14 @@ function Staff() {
       // =========================
       // SUCCESS
       // =========================
-
       console.log("STAFF CREATED:", data);
 
       setSuccessMessage("Staff member created successfully.");
 
-      // Reset the form
       resetForm();
 
-      // Refresh staff table
       await fetchStaff();
 
-      // Keep form open so success can be seen
       setCreating(false);
     } catch (error) {
       console.error("CREATE STAFF ERROR:", error);
@@ -235,9 +230,8 @@ function Staff() {
   // =========================
   // OPEN / CLOSE FORM
   // =========================
-
   const handleToggleForm = () => {
-    setShowForm(!showForm);
+    setShowForm((previous) => !previous);
 
     setFormError("");
     setSuccessMessage("");
@@ -248,15 +242,16 @@ function Staff() {
       {/* =========================
           HEADER
           ========================= */}
-
       <div className="staff-header">
         <div>
           <h1>Staff Management</h1>
-
           <p>Manage clinic staff members</p>
         </div>
 
-        <button className="add-staff-button" onClick={handleToggleForm}>
+        <button
+          className="add-staff-button"
+          onClick={handleToggleForm}
+        >
           {showForm ? "Close" : "+ Add Staff"}
         </button>
       </div>
@@ -264,25 +259,28 @@ function Staff() {
       {/* =========================
           ADD STAFF FORM
           ========================= */}
-
       {showForm && (
         <div className="add-staff-form">
           <h2>Add New Staff</h2>
 
           {/* FORM ERROR */}
-
-          {formError && <div className="form-error">{formError}</div>}
+          {formError && (
+            <div className="form-error">
+              {formError}
+            </div>
+          )}
 
           {/* SUCCESS MESSAGE */}
-
           {successMessage && (
-            <div className="form-success">{successMessage}</div>
+            <div className="form-success">
+              {successMessage}
+            </div>
           )}
 
           <form onSubmit={handleCreateStaff}>
             <div className="form-grid">
-              {/* USERNAME */}
 
+              {/* USERNAME */}
               <div className="form-field">
                 <label>Username</label>
 
@@ -297,7 +295,6 @@ function Staff() {
               </div>
 
               {/* FIRST NAME */}
-
               <div className="form-field">
                 <label>First Name</label>
 
@@ -311,7 +308,6 @@ function Staff() {
               </div>
 
               {/* LAST NAME */}
-
               <div className="form-field">
                 <label>Last Name</label>
 
@@ -325,7 +321,6 @@ function Staff() {
               </div>
 
               {/* EMAIL */}
-
               <div className="form-field">
                 <label>Email</label>
 
@@ -339,7 +334,6 @@ function Staff() {
               </div>
 
               {/* PASSWORD */}
-
               <div className="form-field">
                 <label>Password</label>
 
@@ -354,7 +348,6 @@ function Staff() {
               </div>
 
               {/* ROLE */}
-
               <div className="form-field">
                 <label>Role</label>
 
@@ -363,19 +356,28 @@ function Staff() {
                   value={formData.role}
                   onChange={handleChange}
                 >
-                  <option value="DOCTOR">Doctor</option>
+                  <option value="RECEPTIONIST">
+                    Receptionist
+                  </option>
 
-                  <option value="RECEPTIONIST">Receptionist</option>
+                  <option value="DOCTOR">
+                    Doctor
+                  </option>
 
-                  <option value="PHARMACIST">Pharmacist</option>
+                  <option value="PHARMACIST">
+                    Pharmacist
+                  </option>
 
-                  <option value="LAB_TECHNICIAN">Lab Technician</option>
+                  <option value="LAB_TECHNICIAN">
+                    Lab Technician
+                  </option>
                 </select>
               </div>
 
-              {/* DEPARTMENT
-                  ONLY FOR DOCTOR */}
-
+              {/* =========================
+                  DEPARTMENT
+                  ONLY FOR DOCTOR
+                  ========================= */}
               {formData.role === "DOCTOR" && (
                 <div className="form-field">
                   <label>Department</label>
@@ -386,20 +388,33 @@ function Staff() {
                     onChange={handleChange}
                     required
                   >
-                    <option value="">Select Department</option>
+                    <option value="">
+                      Select Department
+                    </option>
 
                     {departments.map((department) => (
-                      <option key={department.id} value={department.id}>
+                      <option
+                        key={department.id}
+                        value={department.id}
+                      >
                         {department.name}
                       </option>
                     ))}
                   </select>
+
+                  {/* Temporary debugging information */}
+                  {departments.length === 0 && (
+                    <small>
+                      No departments available
+                    </small>
+                  )}
                 </div>
               )}
 
-              {/* CONSULTATION FEE
-                  ONLY FOR DOCTOR */}
-
+              {/* =========================
+                  CONSULTATION FEE
+                  ONLY FOR DOCTOR
+                  ========================= */}
               {formData.role === "DOCTOR" && (
                 <div className="form-field">
                   <label>Consultation Fee</label>
@@ -421,7 +436,6 @@ function Staff() {
             {/* =========================
                 ACTIVE STATUS
                 ========================= */}
-
             <div className="active-checkbox">
               <label>
                 <input
@@ -430,6 +444,7 @@ function Staff() {
                   checked={formData.is_active}
                   onChange={handleChange}
                 />
+
                 Active Staff
               </label>
             </div>
@@ -437,13 +452,14 @@ function Staff() {
             {/* =========================
                 CREATE BUTTON
                 ========================= */}
-
             <button
               type="submit"
               className="create-staff-button"
               disabled={creating}
             >
-              {creating ? "Creating..." : "Create Staff"}
+              {creating
+                ? "Creating..."
+                : "Create Staff"}
             </button>
           </form>
         </div>
@@ -452,40 +468,41 @@ function Staff() {
       {/* =========================
           STAFF SUMMARY
           ========================= */}
-
       <div className="staff-summary">
-        <strong>Total Staff: {staff.length}</strong>
+        <strong>
+          Total Staff: {staff.length}
+        </strong>
       </div>
 
       {/* =========================
           LOADING
           ========================= */}
-
-      {loading && <p>Loading staff...</p>}
+      {loading && (
+        <p>Loading staff...</p>
+      )}
 
       {/* =========================
           ERROR
           ========================= */}
-
-      {error && <p className="staff-error">{error}</p>}
+      {error && (
+        <p className="staff-error">
+          {error}
+        </p>
+      )}
 
       {/* =========================
           STAFF TABLE
           ========================= */}
-
       {!loading && !error && (
         <div className="staff-table-container">
           <table className="staff-table">
+
             <thead>
               <tr>
                 <th>Staff ID</th>
-
                 <th>Username</th>
-
                 <th>Name</th>
-
                 <th>Email</th>
-
                 <th>Role</th>
               </tr>
             </thead>
@@ -493,22 +510,34 @@ function Staff() {
             <tbody>
               {staff.map((member) => (
                 <tr key={member.staff_id}>
-                  <td>{member.staff_id}</td>
-
-                  <td>{member.username}</td>
 
                   <td>
-                    {member.first_name} {member.last_name}
+                    {member.staff_id}
                   </td>
-
-                  <td>{member.email}</td>
 
                   <td>
-                    <span className="role-badge">{member.role}</span>
+                    {member.username}
                   </td>
+
+                  <td>
+                    {member.first_name}{" "}
+                    {member.last_name}
+                  </td>
+
+                  <td>
+                    {member.email}
+                  </td>
+
+                  <td>
+                    <span className="role-badge">
+                      {member.role}
+                    </span>
+                  </td>
+
                 </tr>
               ))}
             </tbody>
+
           </table>
         </div>
       )}
