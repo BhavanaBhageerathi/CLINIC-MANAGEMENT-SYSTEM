@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom";
+
 function AdminDashboard() {
+  const navigate = useNavigate();
+
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
@@ -20,19 +24,38 @@ function AdminDashboard() {
 
         <nav className="sidebar-menu">
 
-          <button className="sidebar-item active">
+          <button
+            className="sidebar-item active"
+            onClick={() => navigate("/admin")}
+          >
             Dashboard
           </button>
 
-          <button className="sidebar-item">
+          <button
+            className="sidebar-item"
+            onClick={() => navigate("/admin/staff")}
+          >
             Staff
           </button>
 
-          <button className="sidebar-item">
+          <button
+            className="sidebar-item"
+            onClick={() => navigate("/admin/departments")}
+          >
+            Departments
+          </button>
+
+          <button
+            className="sidebar-item"
+            onClick={() => navigate("/admin/medicines")}
+          >
             Medicines
           </button>
 
-          <button className="sidebar-item">
+          <button
+            className="sidebar-item"
+            onClick={() => navigate("/admin/lab-tests")}
+          >
             Lab Tests
           </button>
 
@@ -47,7 +70,6 @@ function AdminDashboard() {
 
       </aside>
 
-
       {/* Main Content */}
       <main className="admin-main">
 
@@ -61,7 +83,6 @@ function AdminDashboard() {
             <span>Admin</span>
           </div>
         </header>
-
 
         {/* Dashboard Content */}
         <section className="dashboard-content">
